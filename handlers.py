@@ -27,7 +27,9 @@ async def handle_location(update: Update, context: CallbackContext) -> None:
     location: Location | None = (
         update.message.location
         if update.message
-        else update.edited_message.location if update.edited_message else None
+        else update.edited_message.location
+        if update.edited_message
+        else None
     )
 
     if location is None:
@@ -60,7 +62,7 @@ async def handle_location(update: Update, context: CallbackContext) -> None:
 async def handle_choose_restaurant(update: Update, context: CallbackContext) -> None:
     global restaurant_is_open, restaurant_index, lat, lon
 
-    if not update.message.text.isdigit():
+    if update.message.text is None or not update.message.text.isdigit():
         await context.bot.send_message(
             update.effective_chat.id,
             "Please send a number corresponding to the list above",
