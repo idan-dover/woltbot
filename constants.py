@@ -5,4 +5,5 @@ RESTAURANT = {
     "Greco": "deli-by-greco",
     "Silly Kid": "silly-kid",
     "Souplier": "souplier",
+    "mcdonalds": "mcdonalds",
 }
