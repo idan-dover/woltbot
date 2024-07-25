@@ -12,5 +12,5 @@ I am a simple python program to run a telegram bot that gives me data about rest
 - Clone this repository by entering the command ```git clone <repo-url>```
 - Create a .env file and copy the text from .env.local file. After that put the bot token in the value of "BOT_API_KEY"
 - Download required packages: "python-telegram-bot", "python-dotenv", "requests"
-- Run python3 main.py
+- Run ```python3 main.py```
 - Enjoy :)
