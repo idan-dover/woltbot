@@ -13,6 +13,7 @@ def main():
 
     application = ApplicationBuilder().token(bot_api_key).build()
     application.add_handlers(handlers)
+    print("Starting wolt bot")
     application.run_polling()
 
 
