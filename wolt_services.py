@@ -2,7 +2,9 @@ import requests
 from constants import WOLT_URL
 
 
-def check_if_restaurant_is_open(restaurant_id: str, lat: float, lon: float) -> bool:
+def check_if_restaurant_is_open(
+    restaurant_id: str, lat: float, lon: float
+) -> bool | str:
     wolt_url = (
         WOLT_URL.replace("<RESTAURANT_ID>", restaurant_id)
         .replace("<LATITUDE>", str(lat))
@@ -16,4 +18,4 @@ def check_if_restaurant_is_open(restaurant_id: str, lat: float, lon: float) -> b
         return data["venue"]["open_status"]["is_open"]
 
     except requests.exceptions.RequestException:
-        return False
+        return "could not get data from wolt"

@@ -5,7 +5,7 @@ from decorators import check_start, user_started
 from wolt_services import check_if_restaurant_is_open
 
 restaurant_index: int | None = None
-restaurant_is_open: bool = False
+restaurant_is_open: bool | str = False
 lat: float | None = None
 lon: float | None = None
 
@@ -45,12 +45,19 @@ async def handle_location(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    if restaurant_is_open:
-        return
-
     restaurant_name = list(RESTAURANT.keys())[restaurant_index]
     restaurant_id = RESTAURANT[restaurant_name]
+    if restaurant_is_open:
+        restaurant_is_open = check_if_restaurant_is_open(restaurant_id, lat, lon)
+        return
+
     restaurant_is_open = check_if_restaurant_is_open(restaurant_id, lat, lon)
+
+    if type(restaurant_is_open) is str:
+        await context.bot.send_message(
+            update.effective_chat.id,
+            "oops, seems like we had some issues getting the data, try to send your location again",
+        )
 
     await context.bot.send_message(
         update.effective_chat.id,
@@ -88,6 +95,12 @@ async def handle_choose_restaurant(update: Update, context: CallbackContext) -> 
     restaurant_name = list(RESTAURANT.keys())[restaurant_index]
     restaurant_id = RESTAURANT[restaurant_name]
     restaurant_is_open = check_if_restaurant_is_open(restaurant_id, lat, lon)
+
+    if type(restaurant_is_open) is str:
+        await context.bot.send_message(
+            update.effective_chat.id,
+            "oops, seems like we had some issues getting the data, try to send your location again",
+        )
 
     await context.bot.send_message(
         update.effective_chat.id,
