@@ -2,7 +2,9 @@ from telegram import Location, Update
 from telegram.ext import CallbackContext, CommandHandler, MessageHandler, filters
 from constants import RESTAURANT
 from decorators import check_start, user_started
-from wolt_services import check_if_restaurant_is_open
+from logger import logger
+from wolt_exception import WoltException
+from wolt_services import is_restaurant_open
 
 restaurant_index: int | None = None
 restaurant_is_open: bool | str = False
@@ -15,6 +17,15 @@ restaurant_list = "\n".join(
 
 
 async def handle_start(update: Update, context: CallbackContext) -> None:
+    """
+    Handle the bot's /start command. This function should be used with the command handler.
+
+    Args:
+        update (telegram.Update): Contains information about the incoming update.
+        context (telegram.ext.CallbackContext): Provides context for the command, including the bot instance
+    Returns:
+        None: This function does not return a value.
+    """
     user = update.message.from_user
     user_started[user.id] = True
     message = f"Hi {user.first_name}, Which restaurant should we check for you?\n{restaurant_list}"
@@ -23,6 +34,15 @@ async def handle_start(update: Update, context: CallbackContext) -> None:
 
 @check_start
 async def handle_location(update: Update, context: CallbackContext) -> None:
+    """
+    Handle the users location messages. This function should be used with the message handler.
+
+    Args:
+        update (telegram.Update): Contains information about the incoming update.
+        context (telegram.ext.CallbackContext): Provides context for the command, including the bot instance
+    Returns:
+        None: This function does not return a value
+    """
     global restaurant_is_open, lat, lon
     location: Location | None = (
         update.message.location
@@ -48,12 +68,13 @@ async def handle_location(update: Update, context: CallbackContext) -> None:
     restaurant_name = list(RESTAURANT.keys())[restaurant_index]
     restaurant_id = RESTAURANT[restaurant_name]
     if restaurant_is_open:
-        restaurant_is_open = check_if_restaurant_is_open(restaurant_id, lat, lon)
+        restaurant_is_open = is_restaurant_open(restaurant_id, lat, lon)
         return
 
-    restaurant_is_open = check_if_restaurant_is_open(restaurant_id, lat, lon)
-
-    if type(restaurant_is_open) is str:
+    try:
+        restaurant_is_open = is_restaurant_open(restaurant_id, lat, lon)
+    except WoltException as e:
+        logger.info(f"Was not able to retrieve data from wolt api: {e}")
         await context.bot.send_message(
             update.effective_chat.id,
             "oops, seems like we had some issues getting the data, try to send your location again",
@@ -66,7 +87,16 @@ async def handle_location(update: Update, context: CallbackContext) -> None:
 
 
 @check_start
-async def handle_choose_restaurant(update: Update, context: CallbackContext) -> None:
+async def handle_restaurant_selection(update: Update, context: CallbackContext) -> None:
+    """
+    Handle the users text messages. This function should be used with the message handler. It will only trigger when after the user used /start and it will pick the restaurant from the given list
+
+    Args:
+        update (telegram.Update): Contains information about the incoming update.
+        context (telegram.ext.CallbackContext): Provides context for the command, including the bot instance
+    Returns:
+        None: This function does not return a value
+    """
     global restaurant_is_open, restaurant_index, lat, lon
 
     if update.message.text is None or not update.message.text.isdigit():
@@ -94,9 +124,10 @@ async def handle_choose_restaurant(update: Update, context: CallbackContext) -> 
 
     restaurant_name = list(RESTAURANT.keys())[restaurant_index]
     restaurant_id = RESTAURANT[restaurant_name]
-    restaurant_is_open = check_if_restaurant_is_open(restaurant_id, lat, lon)
-
-    if type(restaurant_is_open) is str:
+    try:
+        restaurant_is_open = is_restaurant_open(restaurant_id, lat, lon)
+    except WoltException as e:
+        logger.info(f"Was not able to retrieve data from wolt api: {e}")
         await context.bot.send_message(
             update.effective_chat.id,
             "oops, seems like we had some issues getting the data, try to send your location again",
@@ -111,5 +142,5 @@ async def handle_choose_restaurant(update: Update, context: CallbackContext) -> 
 handlers = [
     CommandHandler("start", handle_start),
     MessageHandler(filters.LOCATION, handle_location),
-    MessageHandler(filters.TEXT, handle_choose_restaurant),
+    MessageHandler(filters.TEXT, handle_restaurant_selection),
 ]

@@ -1,21 +1,17 @@
 import requests
 from constants import WOLT_URL
+from wolt_exception import WoltException
 
 
-def check_if_restaurant_is_open(
-    restaurant_id: str, lat: float, lon: float
-) -> bool | str:
-    wolt_url = (
-        WOLT_URL.replace("<RESTAURANT_ID>", restaurant_id)
-        .replace("<LATITUDE>", str(lat))
-        .replace("<LONGITUDE>", str(lon))
-    )
+def is_restaurant_open(restaurant_id: str, lat: float, lon: float) -> bool:
+    wolt_url = WOLT_URL.format(restaurant_id=restaurant_id, lat=lat, lon=lon)
+
     try:
         response = requests.get(wolt_url)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        response.raise_for_status()
 
         data = response.json()
         return data["venue"]["open_status"]["is_open"]
 
     except requests.exceptions.RequestException:
-        return "could not get data from wolt"
+        raise WoltException("Failed to connect to Wolt API")

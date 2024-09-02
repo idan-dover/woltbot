@@ -1,4 +1,4 @@
-WOLT_URL = "https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/<RESTAURANT_ID>/dynamic/?lat=<LATITUDE>&lon=<LONGITUDE>"
+WOLT_URL = "https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/{restaurant_id}/dynamic/?lat={lat}&lon={lon}"
 
 RESTAURANT = {
     "Fat Cow": "fat-cow",
